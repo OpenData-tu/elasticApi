@@ -41,6 +41,7 @@ const router = express.Router();
 
 // CREATE ROUTING FOR THE API
 router.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
     next(); // make sure we go to the next routes and don't stop here
 });
 
@@ -64,67 +65,29 @@ router.route('/indices')
         })
             .then(function (result) {
                 // let jsonObj = JSON.parse(JSON.stringify(result).replace('[', '').replace(']', ''));
-                let resultString = JSON.stringify(result).substring(1, JSON.stringify(result).length-1);
-                res.render(result);
+                //let resultString = JSON.stringify(result).substring(1, JSON.stringify(result).length-1);
+                res.json(result.map(d => { 
+                    return {
+                        "name": d.index,                        
+                        "health": d.health
+                    };
+
+                }));
             })
             .catch(err => console.error(`Error connecting to the es client: ${err}`));
     });
 
+ router.route('/indices/:indexName')
 
-
-router.route('/indices/:indexName')
-
-// Do something!
-    .get(function (req, res) {
-        //console.log('Looking for index ' + req.params.indexName);
-        //esClient.indices.get(req.params.indexName)
-        stdMethods.existIndex(req.params.indexName)
-            .then(function (result) {
-                res.json(result);
-            })
-            .catch(err => console.error(`Error connecting to the es client: ${err}`));
-    });
-
-
-// router.route('/indices/:indexName/all')
-//
-//     .get(function(req, res) {
-//        esClient.search({
-//             index: req.params.indexName,
-//             q: '_id: 24'
-//             // body: {
-//             //     query: {
-//             //         match: {
-//             //             _id: '24'
-//             //         }
-//             //     }
-//             // }
-//         })
-//             .then(function(result) {
-//                 res.json(result);
-//             })
-//             .catch(err => console.error(`Error connecting to the es client: ${err}`));
-//     });
-
-router.route('/indices/:indexName/all')
-
-    .get(function(req, res) {
-       esClient.search({
-            index: req.params.indexName,
-            q: '_id: 24'
-            // body: {
-            //     query: {
-            //         match: {
-            //             _id: '24'
-            //         }
-            //     }
-            // }
-        }, function(error, result) {
-                console.log(error);
-                console.log(result);
-            }
-       )
-    });
+     .get(function(req, res) {
+        esClient.search({
+             index: req.params.indexName
+         })
+             .then(function(result) {
+                 res.json(result.hits.hits[0]._source.hits.map(d => d._source));
+             })
+             .catch(err => console.error(`Error connecting to the es client: ${err}`));
+     });
 
 router.route('/indices/:indexName/docs/:docId')
 
