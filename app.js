@@ -84,7 +84,7 @@ router.route('/indices')
              index: req.params.indexName
          })
              .then(function(result) {
-                 res.json(result.hits.hits[0]._source.hits.map(d => d._source));
+                 res.json(result.hits.hits.map(d => d._source));
              })
              .catch(err => console.error(`Error connecting to the es client: ${err}`));
      });
@@ -127,6 +127,14 @@ router.route('/indices/:indexName/suggest/:input')
                 res.json(result);
             })
             .catch(err => console.error('Error connecting to the es client: ${err}'));
+    });
+
+router.route('/indices/:indexName/suggest/:input')
+
+    // Get suggestions
+    .get(function(req, res){
+        
+        //return JSON.        
     });
 
 
