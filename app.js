@@ -34,7 +34,7 @@ const app = express();
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+//app.use(express.static(path.join(__dirname, 'public')));
 
 const port = process.env.PORT || 8080;
 const router = express.Router();
@@ -172,6 +172,7 @@ router.route('/indices/:indexName/suggest/:input')
 // REGISTER ALL ROUTES
 // all of our routes will be prefixed with /api
 app.use('/api', router);
+app.use('/', express.static('dist'));
 
 
 app.listen(port);
