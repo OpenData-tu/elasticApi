@@ -34,7 +34,7 @@ const app = express();
 // app.use(bodyParser.json());
 // app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
-// app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 const port = process.env.PORT || 8080;
 const router = express.Router();
@@ -59,9 +59,13 @@ router.route('/indices')
 
 // Show all indexes
     .get(function (req, res) {
-        esClient.cat.indices({v: true})
+        esClient.cat.indices({
+            format: 'json'
+        })
             .then(function (result) {
-                res.json(result);
+                // let jsonObj = JSON.parse(JSON.stringify(result).replace('[', '').replace(']', ''));
+                let resultString = JSON.stringify(result).substring(1, JSON.stringify(result).length-1);
+                res.render(result);
             })
             .catch(err => console.error(`Error connecting to the es client: ${err}`));
     });
@@ -74,11 +78,52 @@ router.route('/indices/:indexName')
     .get(function (req, res) {
         //console.log('Looking for index ' + req.params.indexName);
         //esClient.indices.get(req.params.indexName)
-        stdMethods.existIndex({index: req.params.indexName})
+        stdMethods.existIndex(req.params.indexName)
             .then(function (result) {
                 res.json(result);
             })
             .catch(err => console.error(`Error connecting to the es client: ${err}`));
+    });
+
+
+// router.route('/indices/:indexName/all')
+//
+//     .get(function(req, res) {
+//        esClient.search({
+//             index: req.params.indexName,
+//             q: '_id: 24'
+//             // body: {
+//             //     query: {
+//             //         match: {
+//             //             _id: '24'
+//             //         }
+//             //     }
+//             // }
+//         })
+//             .then(function(result) {
+//                 res.json(result);
+//             })
+//             .catch(err => console.error(`Error connecting to the es client: ${err}`));
+//     });
+
+router.route('/indices/:indexName/all')
+
+    .get(function(req, res) {
+       esClient.search({
+            index: req.params.indexName,
+            q: '_id: 24'
+            // body: {
+            //     query: {
+            //         match: {
+            //             _id: '24'
+            //         }
+            //     }
+            // }
+        }, function(error, result) {
+                console.log(error);
+                console.log(result);
+            }
+       )
     });
 
 router.route('/indices/:indexName/docs/:docId')
