@@ -22,7 +22,7 @@ esClient.ping({
     }
 });
 
-// const bulkIndex = require('./modules/bulkIndex');
+const bulkIndex = require('./modules/bulkIndex');
 // const searchIndex = require('./modules/searchAll');
 const stdMethods = require('./modules/stdMethods');
 
@@ -81,7 +81,12 @@ router.route('/indices')
 
      .get(function(req, res) {
         esClient.search({
-             index: req.params.indexName
+             index: req.params.indexName,
+             size: 10000,
+             body: {
+                sort: [{ "timestamp": { "order": "desc" } }],                
+                query: { match_all: {}}
+     }
          })
              .then(function(result) {
                  res.json(result.hits.hits.map(d => d._source));
@@ -129,10 +134,12 @@ router.route('/indices/:indexName/suggest/:input')
             .catch(err => console.error('Error connecting to the es client: ${err}'));
     });
 
-router.route('/indices/:indexName/suggest/:input')
+router.route('/test')
 
     // Get suggestions
     .get(function(req, res){
+        bulkIndex.bulkIndexGen("weather","daten",10000);
+        res.end();
         
         //return JSON.        
     });
