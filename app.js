@@ -31,8 +31,8 @@ const app = express();
 // view engine setup
 // app.set('views', path.join(__dirname, 'views'));
 // app.set('view engine', 'pug');
-// app.use(bodyParser.json());
-// app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
 // app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
@@ -58,18 +58,17 @@ router.get('/', function (req, res) {
 
 router.route('/indices')
 
-// Show all indexes
+    // Show all indexes
     .get(function (req, res) {
         esClient.cat.indices({
             format: 'json'
         })
             .then(function (result) {
-                // let jsonObj = JSON.parse(JSON.stringify(result).replace('[', '').replace(']', ''));
-                //let resultString = JSON.stringify(result).substring(1, JSON.stringify(result).length-1);
-                res.json(result.map(d => { 
+                res.json(result.map(d => {
                     return {
-                        "name": d.index,                        
+                        "name": d.index,
                         "health": d.health
+                        //TODO primary size
                     };
 
                 }));
@@ -77,26 +76,53 @@ router.route('/indices')
             .catch(err => console.error(`Error connecting to the es client: ${err}`));
     });
 
- router.route('/indices/:indexName')
+router.route('/indices/:indexName')
 
-     .get(function(req, res) {
+    .get(function (req, res) {
         esClient.search({
-             index: req.params.indexName,
-             size: 10000,
-             body: {
-                sort: [{ "timestamp": { "order": "desc" } }],                
-                query: { match_all: {}}
-     }
-         })
-             .then(function(result) {
-                 res.json(result.hits.hits.map(d => d._source));
-             })
-             .catch(err => console.error(`Error connecting to the es client: ${err}`));
-     });
+            index: req.params.indexName,
+            size: 10000,
+            body: {
+                sort: [{ "timestamp": { "order": "desc" } }],
+                query: { match_all: {} }
+            }
+        })
+            .then(function (result) {
+                res.json(result.hits.hits.map(d => d._source));
+            })
+            .catch(err => console.error(`Error connecting to the es client: ${err}`));
+    });
+
+
+// TODO make it work
+router.route('/indices/:indexName/search')
+
+    .post(function (req, res) {
+        // esClient.search({
+        //     index: req.params.indexName,
+        //     size: 10000,
+        //     body: {
+        //         sort: [{"timestamp": { "order": "desc" } }],
+        //         query: req.body
+        //             /*{
+        //             match: {
+        //                 field: field user input,
+        //                 field2: input ...
+        //             }
+        //             }
+        //              */
+        //     }
+        // })
+        console.log('POST Hurra! ' + req.body);
+    });
+    // .then(function(result) {
+    //     res.redirect('/');
+    // })
+    // .catch(err => console.error(`Error connecting to the es client: ${err}`));
 
 router.route('/indices/:indexName/docs/:docId')
 
-// Check for doc with given Id, if exists in given index!
+    // Check for doc with given Id, if exists in given index!
     .get(function (req, res) {
         //console.log('Looking for index ' + req.params.indexName);
         //esClient.indices.get(req.params.indexName)
@@ -114,7 +140,7 @@ router.route('/indices/:indexName/docs/:docId')
 router.route('/indices/:indexName/suggest/:input')
 
     // Get suggestions
-    .get(function(req, res){
+    .get(function (req, res) {
         esClient.suggest({
             index: req.params.indexName,
             type: '_all',
@@ -128,7 +154,7 @@ router.route('/indices/:indexName/suggest/:input')
                 }
             }
         })
-            .then(function(result){
+            .then(function (result) {
                 res.json(result);
             })
             .catch(err => console.error('Error connecting to the es client: ${err}'));
@@ -136,11 +162,11 @@ router.route('/indices/:indexName/suggest/:input')
 
 router.route('/test')
 
-    // Get suggestions
-    .get(function(req, res){
-        bulkIndex.bulkIndexGen("weather","daten",10000);
+    // Filled the DB with testdata
+    .get(function (req, res) {
+        bulkIndex.bulkIndexGen("weather", "daten", 10000);
         res.end();
-        
+
         //return JSON.        
     });
 
