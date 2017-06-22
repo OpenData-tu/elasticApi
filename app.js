@@ -94,6 +94,41 @@ router.route('/indices/:indexName')
     });
 
 
+router.route('/indices/:indexName/bucket/:time/agr/:type')
+    .get(function (req, res) {  
+
+        let jsonVar = {        
+            index: req.params.indexName,        
+            size: 0,    
+            body: {
+                sort: [{ "timestamp": { "order": "desc" } }],
+                "aggs": {
+                        "sales_per_month": {
+                        "date_histogram": {
+                            "field": "timestamp",
+                            "interval": req.params.time
+                        },
+                        "aggs": {
+                            "sales": {
+                            [req.params.type] : {
+                                "field": "sensors.temperature.observation_value"
+                            }
+                            }
+                        }
+                    }
+                }
+                
+            },
+            
+        }      
+        esClient.search(jsonVar)
+            .then(function (result) {
+                res.json(result);
+            })
+            
+            .catch(err => console.error(`Error connecting to the es client: ${err}`));
+    });
+
 // TODO make it work
 router.route('/indices/:indexName/search')
 

@@ -75,7 +75,7 @@ const bulkIndexGen = function bulkIndexGen(index, type, count) {
                         },
                         "temperature": {
                             "sensor": "BME280",
-                            "observation_value": ((Math.sin((Math.PI / (count*1.35)) * i) + 1) * 10 +  10 + ((Math.sin((Math.PI / 180) * i) + 1) / 4) + Math.random()*0.25).toFixed(8)
+                            "observation_value": Number.parseFloat(((Math.sin((Math.PI / (count*1.35)) * i) + 1) * 10 +  10 + ((Math.sin((Math.PI / 180) * i) + 1) / 4) + Math.random()*0.25).toFixed(4))
                         },
                         "humidity": {
                             "sensor": "BME280",
