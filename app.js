@@ -103,13 +103,13 @@ router.route('/indices/:indexName/bucket/:time/agr/:type')
             body: {
                 sort: [{ "timestamp": { "order": "desc" } }],
                 "aggs": {
-                        "sales_per_month": {
+                        "agg_per_time": {
                         "date_histogram": {
                             "field": "timestamp",
                             "interval": req.params.time
                         },
                         "aggs": {
-                            "sales": {
+                            "type": {
                             [req.params.type] : {
                                 "field": "sensors.temperature.observation_value"
                             }
@@ -123,7 +123,12 @@ router.route('/indices/:indexName/bucket/:time/agr/:type')
         }      
         esClient.search(jsonVar)
             .then(function (result) {
-                res.json(result);
+                res.json(result.aggregations.agg_per_time.buckets.map(d =>{
+                    return {
+                        timestamp: d.key_as_string,
+                        value: d.type.value
+                    }
+                }));
             })
             
             .catch(err => console.error(`Error connecting to the es client: ${err}`));
