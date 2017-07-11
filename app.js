@@ -180,7 +180,7 @@ router.route('/test')
 
     // Filled the DB with testdata
     .get(function (req, res) {
-        bulkIndex.bulkIndexGen("weather", "daten", 10000);
+        bulkIndex.bulkIndexGen("data-weather-2017", "data", 100000);
         res.end();
 
         //return JSON.        
@@ -192,6 +192,7 @@ router.route('/test')
 // REGISTER ALL ROUTES
 // all of our routes will be prefixed with /api
 app.use('/api', routeSearch);
+app.use('/helper', router);
 app.use('/', express.static('dist'));
 
 
