@@ -44,21 +44,35 @@ const bulkIndexGen = function bulkIndexGen(index, type, count) {
     let data = [];
     let bulkBody = [];
 
+    let locations = [{
+        "lat": 52.5239,
+        "lon": 13.4573
+    },{        
+        "lat": 55.0239,
+        "lon": 12.7573
+    },{
+        "lat": 48.8539,
+        "lon": 10.4673
+    },{
+        "lat": 49.3539,
+        "lon": 8.1296
+    },{
+        "lat": 53.03539,
+        "lon": 8.7696
+    }];
     let dat = new Date();
     dat.setHours(dat.getHours() + 10);
     console.log((datePlus(2).toISOString()));
     
 
+    let bucket = count/locations.length;
 
-    for(let i=0;i<count;i++){
+    for(let i=0;i<count;i++){        
         data.push({
                     "source_id": "luftdaten_info",
                     "device": "141",
                     "timestamp": datePlus(i).toISOString(),
-                    "location": {
-                        "lat": 48.779,
-                        "lon": 9.16
-                    },
+                    "location": locations[Math.floor(i/bucket)],
                     "license": "find out",
                     "sensors": {
                         "pressure": {
@@ -109,7 +123,7 @@ const bulkIndexGen = function bulkIndexGen(index, type, count) {
                     console.log(++errorCount, item.index.error);
                 }
             });
-            console.log('Successfully indexed ${data.length - errorCount} out of ${data.length} items!');
+            console.log('Successfully indexed %d out of %d items!', bulkBody.length - errorCount,bulkBody.length);
         })
         .catch(console.err);
       
