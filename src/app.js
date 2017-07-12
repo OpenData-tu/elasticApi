@@ -34,25 +34,7 @@ router.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
-// Parse location data
-router.use(function (req, res, next) {
-    
-    if(req.query['location']){
-        req.query['location'] = req.query['location'].split(",");
-    }
-    console.log("Parsed Location")
-    next(); // make sure we go to the next routes and don't stop here
-});
 
-// Parse time data
-router.use(function (req, res, next) {
-    
-    if(req.query['time']){
-        req.query['time'] = req.query['time'].split(",");
-    }
-    console.log("Parsed Time")
-    next(); // make sure we go to the next routes and don't stop here
-});
 
 router.get('/', function (req, res) {
     // TODO index.html
@@ -192,9 +174,9 @@ router.route('/test')
 // REGISTER ALL ROUTES
 // all of our routes will be prefixed with /api
 app.use('/api', routeSearch);
-app.use('/helper', router);
-app.use('/', express.static('dist'));
-
+//app.use('/helper', router);
+//app.use('/', express.static('dist'));
 
 app.listen(port);
+//console.log(routeSearch.stack);
 console.log('Server running on port ' + port);
