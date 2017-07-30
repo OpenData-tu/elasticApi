@@ -1,4 +1,5 @@
 "use strict";
+
 const elasticSearch = require('elasticsearch');
 let host = process.env.ESHOST || '127.0.0.1:9200';
 
@@ -18,10 +19,7 @@ module.exports = class ELASTIC {
         console.log('ElasticSearch running at ' + host);
         this.setupElsticSearch();
       }
-    });
-        
-
-
+    });        
   }
 
   /**
@@ -40,7 +38,7 @@ module.exports = class ELASTIC {
               "template": "data-*",
               "order": 1,
               "settings": {
-                "number_of_shards": 3,
+                "number_of_shards": 1,
                 "number_of_replicas": 3
               },
               "mappings": {
@@ -83,6 +81,10 @@ module.exports = class ELASTIC {
 
   }
 
+  /**
+   * Returns all indecies or all indecies belonging to one source
+   * @param {String} filter index to filter for
+   */
   getIndices(filter) {
     let indicies = "data-*";
     if(filter != undefined && Array.isArray(filter)){
@@ -98,11 +100,32 @@ module.exports = class ELASTIC {
      });
   }
 
+  /**
+   * Return all available sources ids
+   */
+  getSources() {
+    return new Promise((resolve, reject) => {
+      this.getIndices().then(res => {
+        res = res.map(elem => 
+          {
+            elem = elem.index.substring(5);
+            if(elem.indexOf('-') != -1)
+              elem = elem.substring(0,elem.indexOf('-'));
+            return elem;
+          }).filter((elem, pos, arr) => {
+            return arr.indexOf(elem) == pos;
+          });
+        resolve(res);
+        
+      });
+    });
+  }
+
   
 
   /**
-   * 
-   * @param {*} req 
+   * Does a search at Elastic Search including a aggregation
+   * @param {Object} req Request object from the client
    */
   _searchAgg(req) {
     return new Promise((resolve, reject) => {
@@ -182,6 +205,10 @@ module.exports = class ELASTIC {
 
   }
 
+  /**
+   * Does a general search at Elastic Search
+   * @param {Object} req Request object from the client
+   */
   _search(req) {
     return new Promise((resolve, reject) => {
       //req.params.indexName = "data-" + req.params.indexName + "*";
@@ -247,6 +274,9 @@ module.exports = class ELASTIC {
 
   }
 
+  /**
+   * Adds the box location filter to the give query
+   */
   addLocationFilterBox(req, query){
     if (!query.body.query.constant_score.filter["bool"]) {
           let range = query.body.query.constant_score.filter;

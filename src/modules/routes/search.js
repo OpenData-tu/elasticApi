@@ -1,4 +1,5 @@
 "use strict";
+
 const express = require('express');
 
 const routerSearch = express.Router();
@@ -33,7 +34,7 @@ routerSearch.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
-// Parse time data
+// Parse aggregation type data
 routerSearch.use(function (req, res, next) {
 
     // all allowed aggregations
@@ -55,38 +56,12 @@ routerSearch.use(function (req, res, next) {
     next(); // make sure we go to the next routes and don't stop here
 });
 
-routerSearch.get('/', (req, res) => {
-    console.log("test");
-
-    let d = new Date("2017-05-22");
-    //console.log(d.getUTCFullYear());
-    db.getIndices("data").then(result => {
-        res.json(optimizeTime(result.map(elem => elem.index), "2016", "2017-07-02"));
-        //res.json(result);
-    });
-    //res.end();
-});
-
-function optimizeTime(indicies, startTime, endTime) {
-    let start = new Date(startTime);
-    let end = new Date(endTime);
-    end = end - 1;
-
-    return indicies.filter(item => {
-        let indexOfTime = item.indexOf('-', 5);
-        if (indexOfTime == -1) return true;
-        else {
-            let indexDate = new Date(item.substr(indexOfTime + 1));
-            return indexDate >= start && indexDate <= end ? true : false;
-        }
-    });
-
-
-}
-
-// routerSearch.get('/sources/:indexName/bucket/:time/agr/:type', (req, res) => {
+/**
+ * sources endpoint with the sourcename/indexname as query parameter
+ */
 routerSearch.get('/sources/:indexName', (req, res) => {
     /*
+    TODO for querying the management db
     META.getSources().then(result => {
         if(result.includes(req.params.indexName)){
             db._search(req).then((result)=> res.json(result));
@@ -97,7 +72,7 @@ routerSearch.get('/sources/:indexName', (req, res) => {
     */
     db.getIndices(req.params.indexName).then(result => {
         if (req.query["time"])
-            req.params.indexName = optimizeTime(result.map(elem => elem.index), req.query["time"][0], req.query["time"][1]);
+            req.params.indexName = META.optimizeTime(result.map(elem => elem.index), req.query["time"][0], req.query["time"][1]);
         else {
             req.params.indexName = result.map(item => item.index);
         }
@@ -112,18 +87,16 @@ routerSearch.get('/sources/:indexName', (req, res) => {
         } else
             db._search(req).then((result) => res.json(result));
     });
-
-
-    //req.params.
-    //db._search(req).then((result)=> res.json(result));
-
 });
 
+/**
+ * measurements endpoint with the measurement type as query parameter
+ */
 routerSearch.get('/measurements/:measurements', (req, res) => {
     // TODO: filter indicies by Messurment
     db.getIndicesByMessurement().then(result => {
         if (req.query["time"])
-            req.params.indexName = optimizeTime(result.map(elem => elem.index), req.query["time"][0], req.query["time"][1]);
+            req.params.indexName = META.optimizeTime(result.map(elem => elem.index), req.query["time"][0], req.query["time"][1]);
         req.query['includes'] = ["location", "license", "timestamp", "device", "source_id", "extra"]
         
         req.query.includes.push("sensors." + req.params.measurements + ".*");
@@ -145,12 +118,9 @@ routerSearch.get('/measurements/:measurements', (req, res) => {
 });
 
 routerSearch.get('/sources', (req, res) => {
-    META.getSources().then(result => {
+    db.getSources().then(result => {
         res.json(result);
     });
 });
-
-
-
 
 module.exports = routerSearch;
