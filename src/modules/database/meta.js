@@ -46,8 +46,6 @@ function optimizeTime(indicies, startTime, endTime) {
             return indexDate >= start && indexDate <= end ? true : false;
         }
     });
-
-
 }
 
 module.exports = {getSources, optimizeTime};

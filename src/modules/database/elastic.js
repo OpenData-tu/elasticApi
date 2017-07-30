@@ -19,7 +19,7 @@ module.exports = class ELASTIC {
         console.log('ElasticSearch running at ' + host);
         this.setupElsticSearch();
       }
-    });        
+    });
   }
 
   /**
@@ -28,54 +28,54 @@ module.exports = class ELASTIC {
   setupElsticSearch() {
     console.log("setup");
     this.esClient.indices.getTemplate({
-          name: 'datasource_all'
-        }).then(() => {
-          console.log("Mapping has allready been set!");
-        }).catch(() => {
-          this.esClient.indices.putTemplate({
-            name: 'datasource_all',
-            body: {
-              "template": "data-*",
-              "order": 1,
-              "settings": {
-                "number_of_shards": 1,
-                "number_of_replicas": 3
+      name: 'datasource_all'
+    }).then(() => {
+      console.log("Mapping has allready been set!");
+    }).catch(() => {
+      this.esClient.indices.putTemplate({
+          name: 'datasource_all',
+          body: {
+            "template": "data-*",
+            "order": 1,
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 3
+            },
+            "mappings": {
+              "_default_": {
+                "_all": {
+                  "enabled": false
+                }
               },
-              "mappings": {
-                "_default_": {
-                  "_all": {
-                    "enabled": false
-                  }
-                },
-                "data": {
-                  "properties": {
-                    "device": {
-                      "type": "keyword"
-                    },
-                    "location": {
-                      "type": "geo_point"
-                    },
-                    "timestamp": {
-                      "type": "date"
-                    },
-                    "timestamp_record": {
-                      "type": "date"
-                    },
-                    "license": {
-                      "type": "text"
-                    }
+              "data": {
+                "properties": {
+                  "device": {
+                    "type": "keyword"
+                  },
+                  "location": {
+                    "type": "geo_point"
+                  },
+                  "timestamp": {
+                    "type": "date"
+                  },
+                  "timestamp_record": {
+                    "type": "date"
+                  },
+                  "license": {
+                    "type": "text"
                   }
                 }
               }
             }
-          })
-          .then(()=> console.log("mapping successful set"))
-          .catch(()=> console.log("error while setting the mapping"));
-        });
-      
+          }
+        })
+        .then(() => console.log("mapping successful set"))
+        .catch(() => console.log("error while setting the mapping"));
+    });
+
   }
 
-  getIndicesByMessurement(){
+  getIndicesByMessurement() {
     //TODO: get actually messurment information and move to meta.js
     return this.getIndices();
 
@@ -87,17 +87,22 @@ module.exports = class ELASTIC {
    */
   getIndices(filter) {
     let indicies = "data-*";
-    if(filter != undefined && Array.isArray(filter)){
-      indices = filter.map(item => "data-"+ item + "*");
-    }else if(filter != undefined){
-      indicies = "data-"+ filter + "*"
+    if (filter != undefined && Array.isArray(filter)) {
+      indices = filter.map(item => "data-" + item + "*");
+    } else if (filter != undefined) {
+      indicies = "data-" + filter + "*"
     }
-     return new Promise((resolve, reject) => {
-       this.esClient.cat.indices({"index" :indicies, "format": "json", "s": "index", "h": "index"}).then(res => {
-         resolve(res);
-        });  
+    return new Promise((resolve, reject) => {
+      this.esClient.cat.indices({
+        "index": indicies,
+        "format": "json",
+        "s": "index",
+        "h": "index"
+      }).then(res => {
+        resolve(res);
+      });
 
-     });
+    });
   }
 
   /**
@@ -106,22 +111,19 @@ module.exports = class ELASTIC {
   getSources() {
     return new Promise((resolve, reject) => {
       this.getIndices().then(res => {
-        res = res.map(elem => 
-          {
-            elem = elem.index.substring(5);
-            if(elem.indexOf('-') != -1)
-              elem = elem.substring(0,elem.indexOf('-'));
-            return elem;
-          }).filter((elem, pos, arr) => {
-            return arr.indexOf(elem) == pos;
-          });
+        res = res.map(elem => {
+          elem = elem.index.substring(5);
+          if (elem.indexOf('-') != -1)
+            elem = elem.substring(0, elem.indexOf('-'));
+          return elem;
+        }).filter((elem, pos, arr) => {
+          return arr.indexOf(elem) == pos;
+        });
         resolve(res);
-        
+
       });
     });
   }
-
-  
 
   /**
    * Does a search at Elastic Search including a aggregation
@@ -177,8 +179,8 @@ module.exports = class ELASTIC {
 
       }
 
-      if (req.query["location"] && req.query["location"].length === 4) {         
-        this.addLocationFilterBox(req, jsonVar);              
+      if (req.query["location"] && req.query["location"].length === 4) {
+        this.addLocationFilterBox(req, jsonVar);
       }
       this.esClient.search(jsonVar)
         .then(function (res) {
@@ -201,8 +203,6 @@ module.exports = class ELASTIC {
 
 
     })
-
-
   }
 
   /**
@@ -219,7 +219,7 @@ module.exports = class ELASTIC {
         timeLte = req.query["time"][1];
 
       }
-      let jsonVar = {        
+      let jsonVar = {
         index: req.params.indexName,
         size: 10000,
         body: {
@@ -239,11 +239,11 @@ module.exports = class ELASTIC {
             "timestamp": {
               "order": "desc"
             }
-          }]          
+          }]
         }
       }
 
-      if(req.query['includes']){
+      if (req.query['includes']) {
         jsonVar.body['_source'] = {
           "includes": req.query['includes']
         }
@@ -252,7 +252,7 @@ module.exports = class ELASTIC {
       }
 
       if (req.query["location"] && req.query["location"].length === 4) {
-        this.addLocationFilterBox(req, jsonVar);        
+        this.addLocationFilterBox(req, jsonVar);
       }
       this.esClient.search(jsonVar)
         .then(function (res) {
@@ -267,42 +267,35 @@ module.exports = class ELASTIC {
         .catch(err => {
           return reject(err);
         });
-
-
     })
-
-
   }
 
   /**
    * Adds the box location filter to the give query
    */
-  addLocationFilterBox(req, query){
+  addLocationFilterBox(req, query) {
     if (!query.body.query.constant_score.filter["bool"]) {
-          let range = query.body.query.constant_score.filter;
-          query.body.query.constant_score.filter = {
-            "bool": {
-              "must": []
-            }
-          }
-          query.body.query.constant_score.filter.bool.must.push(range);
+      let range = query.body.query.constant_score.filter;
+      query.body.query.constant_score.filter = {
+        "bool": {
+          "must": []
         }
-        query.body.query.constant_score.filter.bool.must.push({
-          "geo_bounding_box": {
-            "location": {
-              "top_left": {
-                "lat": req.query["location"][0],
-                "lon": req.query["location"][1],
-              },
-              "bottom_right": {
-                "lat": req.query["location"][2],
-                "lon": req.query["location"][3],
-              }
-            }
+      }
+      query.body.query.constant_score.filter.bool.must.push(range);
+    }
+    query.body.query.constant_score.filter.bool.must.push({
+      "geo_bounding_box": {
+        "location": {
+          "top_left": {
+            "lat": req.query["location"][0],
+            "lon": req.query["location"][1],
+          },
+          "bottom_right": {
+            "lat": req.query["location"][2],
+            "lon": req.query["location"][3],
           }
-        });
-    
+        }
+      }
+    });
   }
-
-  
 }

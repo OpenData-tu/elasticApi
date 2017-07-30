@@ -6,40 +6,22 @@ const esClient = new elasticsearch.Client({
     log: 'warning'
 });
 
-const bulkIndex = function bulkIndex(index, type, data) {
-    let bulkBody = [];
-
-    data.forEach(item => {
-        bulkBody.push({
-            index: {
-                _index: index,
-                _type: type,
-                _id: item.id
-            }
-        });
-
-        bulkBody.push(item);
-    });
-
-    esClient.bulk({body: bulkBody})
-        .then(res => {
-            let errorCount = 0;
-            res.items.forEach(item => {
-                if (item.index && item.index.error){
-                    console.log(++errorCount, item.index.error);
-                }
-            });
-            console.log('Successfully indexed ${data.length - errorCount} out of ${data.length} items!');
-        })
-        .catch(console.err);
-};
-
+/**
+ * just a time creation function which addes hours to the current time
+ * @param {int} plus 
+ */
 const datePlus = function datePlus(plus) {
     let dat = new Date();
     dat.setHours(dat.getHours() + plus);
     return dat;
 }
 
+/**
+ * Function which creates fake data for 5 different locations in germany and partly random temperatures with some sinus
+ * @param {*} index name of the index to enter the data into
+ * @param {*} type type name (usually data)
+ * @param {*} count number of entries
+ */
 const bulkIndexGen = function bulkIndexGen(index, type, count) {
     let data = [];
     let bulkBody = [];
@@ -129,4 +111,4 @@ const bulkIndexGen = function bulkIndexGen(index, type, count) {
       
 };
 
-module.exports = {bulkIndex, bulkIndexGen};
+module.exports = {bulkIndexGen};
